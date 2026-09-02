@@ -1,0 +1,101 @@
+[
+    {
+        "id": "policy_shipping",
+        "inputs": {
+            "message": "How long does standard shipping take?"
+        },
+        "outputs": {
+            "expected_intent": "policy",
+            "expected_tools": [
+                "rag_policy_lookup"
+            ],
+            "expected_task_completed": true,
+            "answer_must_contain": [
+                "3",
+                "5"
+            ]
+        }
+    },
+    {
+        "id": "policy_password",
+        "inputs": {
+            "message": "How long is the password reset link valid?"
+        },
+        "outputs": {
+            "expected_intent": "policy",
+            "expected_tools": [
+                "rag_policy_lookup"
+            ],
+            "expected_task_completed": true,
+            "answer_must_contain": [
+                "15"
+            ]
+        }
+    },
+    {
+        "id": "order_lookup",
+        "inputs": {
+            "message": "Where is ORD-1001?"
+        },
+        "outputs": {
+            "expected_intent": "order",
+            "expected_tools": [
+                "order_lookup"
+            ],
+            "expected_task_completed": true,
+            "answer_must_contain": [
+                "ORD-1001",
+                "SHIPPED"
+            ]
+        }
+    },
+    {
+        "id": "unknown_order",
+        "inputs": {
+            "message": "Where is ORD-9999?"
+        },
+        "outputs": {
+            "expected_intent": "order",
+            "expected_tools": [
+                "order_lookup"
+            ],
+            "expected_task_completed": false,
+            "answer_must_contain": [
+                "ORD-9999",
+                "not found"
+            ]
+        }
+    },
+    {
+        "id": "order_policy",
+        "inputs": {
+            "message": "Can I return ORD-1001?"
+        },
+        "outputs": {
+            "expected_intent": "order_policy",
+            "expected_tools": [
+                "order_lookup",
+                "rag_policy_lookup"
+            ],
+            "expected_task_completed": true,
+            "answer_must_contain": [
+                "ORD-1001",
+                "30"
+            ]
+        }
+    },
+    {
+        "id": "unsupported",
+        "inputs": {
+            "message": "Tell me a joke."
+        },
+        "outputs": {
+            "expected_intent": "unsupported",
+            "expected_tools": [],
+            "expected_task_completed": false,
+            "answer_must_contain": [
+                "support"
+            ]
+        }
+    }
+]

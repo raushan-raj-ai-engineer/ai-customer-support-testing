@@ -1,0 +1,22 @@
+# Python
+.venv/
+__pycache__/
+*.pyc
+.pytest_cache/
+
+# Secrets
+.env
+
+# Chroma
+chroma_db/
+
+# Node
+node_modules/
+
+# Playwright
+playwright-report/
+test-results/
+blob-report/
+
+# macOS
+.DS_Store

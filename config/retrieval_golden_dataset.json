@@ -1,0 +1,44 @@
+[
+    {
+        "id": "refund_return_window",
+        "query": "Can I return a product after 20 days?",
+        "expected_policy_ids": [
+            "REFUND_POLICY"
+        ]
+    },
+    {
+        "id": "refund_processing_time",
+        "query": "How long does a refund take after approval?",
+        "expected_policy_ids": [
+            "REFUND_POLICY"
+        ]
+    },
+    {
+        "id": "shipping_standard",
+        "query": "How long does standard shipping take?",
+        "expected_policy_ids": [
+            "SHIPPING_POLICY"
+        ]
+    },
+    {
+        "id": "shipping_tracking",
+        "query": "When do I receive a tracking number for my order?",
+        "expected_policy_ids": [
+            "SHIPPING_POLICY"
+        ]
+    },
+    {
+        "id": "password_expiry",
+        "query": "How long is a password reset link valid?",
+        "expected_policy_ids": [
+            "PASSWORD_POLICY"
+        ]
+    },
+    {
+        "id": "password_forgot",
+        "query": "I forgot my password. How can I reset it?",
+        "expected_policy_ids": [
+            "PASSWORD_POLICY"
+        ]
+    }
+]

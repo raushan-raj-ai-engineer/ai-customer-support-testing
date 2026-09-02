@@ -1,0 +1,178 @@
+<!DOCTYPE html>
+
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+    <title>
+        AI Customer Support
+    </title>
+
+    <link rel="stylesheet" href="/static/styles.css">
+</head>
+
+<body>
+
+    <main class="page">
+
+        <section class="support-card" aria-labelledby="page-title">
+
+            <header class="header">
+
+                <p class="eyebrow">
+                    Secure Agentic AI Demo
+                </p>
+
+                <h1 id="page-title">
+                    AI Customer Support
+                </h1>
+
+                <p class="subtitle">
+                    Ask about orders, returns,
+                    shipping or account support.
+                </p>
+
+            </header>
+
+
+            <section class="examples" aria-label="Example questions">
+
+                <button class="example-button" type="button" data-question="Where is ORD-1001?">
+                    Track ORD-1001
+                </button>
+
+                <button class="example-button" type="button" data-question="Can I return ORD-1001?">
+                    Return policy
+                </button>
+
+                <button class="example-button" type="button" data-question="How long does standard shipping take?">
+                    Shipping time
+                </button>
+
+            </section>
+
+
+            <form id="support-form" novalidate>
+
+                <label for="message-input" class="field-label">
+                    Your question
+                </label>
+
+                <textarea id="message-input" name="message" rows="4" maxlength="2000" required
+                    placeholder="Example: Where is ORD-1001?"></textarea>
+
+
+                <label class="approval-row">
+
+                    <input id="approve-write" name="approveWrite" type="checkbox">
+
+                    <span>
+                        Approve write actions,
+                        such as creating a ticket
+                    </span>
+
+                </label>
+
+
+                <button id="send-button" type="submit" class="primary-button">
+                    Ask support agent
+                </button>
+
+            </form>
+
+
+            <div id="loading" class="loading" role="status" aria-live="polite" hidden>
+                Processing request...
+            </div>
+
+
+            <div id="error-message" class="error-message" role="alert" hidden></div>
+
+
+            <section id="result-panel" class="result-panel" aria-labelledby="result-title" hidden>
+
+                <div class="result-heading">
+
+                    <h2 id="result-title">
+                        Agent response
+                    </h2>
+
+                    <span id="security-status" class="status-badge"></span>
+
+                </div>
+
+
+                <dl class="result-meta">
+
+                    <div>
+                        <dt>
+                            Intent
+                        </dt>
+
+                        <dd id="intent-value">
+                        </dd>
+                    </div>
+
+
+                    <div>
+                        <dt>
+                            Task completed
+                        </dt>
+
+                        <dd id="task-value">
+                        </dd>
+                    </div>
+
+                </dl>
+
+
+                <div id="answer" class="answer" aria-live="polite"></div>
+
+
+                <section class="details-section" aria-labelledby="tools-title">
+
+                    <h3 id="tools-title">
+                        Tool calls
+                    </h3>
+
+                    <ul id="tool-calls" class="details-list"></ul>
+
+                </section>
+
+
+                <section class="details-section" aria-labelledby="trajectory-title">
+
+                    <h3 id="trajectory-title">
+                        Agent trajectory
+                    </h3>
+
+                    <ol id="trajectory" class="details-list"></ol>
+
+                </section>
+
+
+                <section id="security-section" class="details-section" aria-labelledby="security-title" hidden>
+
+                    <h3 id="security-title">
+                        Security findings
+                    </h3>
+
+                    <ul id="security-findings" class="details-list"></ul>
+
+                </section>
+
+            </section>
+
+        </section>
+
+    </main>
+
+
+    <script src="/static/app.js" defer></script>
+
+</body>
+
+</html>

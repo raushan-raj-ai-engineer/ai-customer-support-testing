@@ -1,0 +1,38 @@
+[
+    {
+        "id": "refund_return_window",
+        "question": "Can I return my laptop after 20 days?",
+        "expected_output": "Yes. Eligible products may be returned within 30 days of the original purchase date.",
+        "expected_policy_id": "REFUND_POLICY"
+    },
+    {
+        "id": "refund_processing_time",
+        "question": "How long does my refund take after it is approved?",
+        "expected_output": "Refund processing normally takes 5 to 7 business days after approval.",
+        "expected_policy_id": "REFUND_POLICY"
+    },
+    {
+        "id": "shipping_standard_time",
+        "question": "How long does standard shipping normally take?",
+        "expected_output": "Standard shipping normally takes 3 to 5 business days.",
+        "expected_policy_id": "SHIPPING_POLICY"
+    },
+    {
+        "id": "shipping_tracking",
+        "question": "When will I receive my tracking number?",
+        "expected_output": "Customers receive a tracking number after the order has been shipped.",
+        "expected_policy_id": "SHIPPING_POLICY"
+    },
+    {
+        "id": "password_reset_expiry",
+        "question": "How long is the password reset link valid?",
+        "expected_output": "The password reset link expires after 15 minutes.",
+        "expected_policy_id": "PASSWORD_POLICY"
+    },
+    {
+        "id": "forgot_password",
+        "question": "I forgot my password. How can I reset it?",
+        "expected_output": "A customer can request a password reset link from the account login page.",
+        "expected_policy_id": "PASSWORD_POLICY"
+    }
+]
