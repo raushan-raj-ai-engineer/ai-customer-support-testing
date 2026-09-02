@@ -1,0 +1,359 @@
+name: Full AI Quality Showcase
+
+on:
+  workflow_dispatch:
+    inputs:
+      run_deepeval:
+        description: Run DeepEval / live LLM tests
+        required: true
+        default: true
+        type: boolean
+
+      run_live_agent:
+        description: Run live LangGraph agent tests
+        required: true
+        default: true
+        type: boolean
+
+      run_langsmith:
+        description: Run live LangSmith tests and experiment
+        required: true
+        default: true
+        type: boolean
+
+      run_playwright:
+        description: Run Playwright E2E with screenshots
+        required: true
+        default: true
+        type: boolean
+
+
+permissions:
+  contents: read
+
+
+jobs:
+  full-ai-quality:
+    name: Master AI Quality Report
+    runs-on: self-hosted
+
+    env:
+      OLLAMA_BASE_URL: http://localhost:11434
+      OLLAMA_APP_MODEL: llama3.2
+      OLLAMA_EVALUATION_MODEL: qwen3:4b-instruct
+
+      LANGSMITH_API_KEY: ${{ secrets.LANGSMITH_API_KEY }}
+      LANGSMITH_TRACING: "true"
+      LANGSMITH_PROJECT: ai-customer-support-agent-showcase
+      LANGCHAIN_CALLBACKS_BACKGROUND: "false"
+
+      ALLURE_RESULTS_DIR: allure-results
+
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+
+      - name: Setup Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.13"
+
+
+      - name: Install Python dependencies
+        run: |
+          python -m venv .venv
+          source .venv/bin/activate
+
+          python -m pip install --upgrade pip
+          pip install -r requirements.txt
+          pip install allure-pytest==2.16.0
+
+
+      - name: Setup Node
+        uses: actions/setup-node@v4
+        with:
+          node-version: "24"
+          cache: npm
+
+
+      - name: Install Node dependencies
+        run: |
+          npm ci
+
+          npm install             --no-save             allure@3.16.0             allure-playwright@3.11.0
+
+
+      - name: Verify Allure
+        run: |
+          npx allure --version
+
+
+      - name: Install Playwright Chromium
+        run: |
+          if [[ "${RUNNER_OS}" == "Linux" ]]; then
+            npx playwright install --with-deps chromium
+          else
+            npx playwright install chromium
+          fi
+
+
+      - name: Verify Ollama
+        id: ollama
+        continue-on-error: true
+        run: |
+          ollama --version
+          ollama list
+
+
+      - name: Ensure application model exists
+        id: app_model
+        continue-on-error: true
+        run: |
+          if ! ollama list | grep -q "llama3.2"; then
+            ollama pull llama3.2
+          fi
+
+          ollama list | grep "llama3.2"
+
+
+      - name: Ensure evaluation model exists
+        id: eval_model
+        if: ${{ inputs.run_deepeval }}
+        continue-on-error: true
+        run: |
+          if ! ollama list | grep -q "qwen3:4b-instruct"; then
+            ollama pull qwen3:4b-instruct
+          fi
+
+          ollama list | grep "qwen3:4b-instruct"
+
+
+      - name: Prepare showcase directories
+        run: |
+          rm -rf             allure-results             allure-report             playwright-report             test-results             artifacts/quality-showcase
+
+          mkdir -p             allure-results             artifacts/quality-showcase
+
+
+      - name: Build vector database
+        id: vector_db
+        continue-on-error: true
+        run: |
+          source .venv/bin/activate
+          python -m scripts.build_vector_db
+
+
+      - name: Run deterministic Python quality tests
+        id: python_quality
+        continue-on-error: true
+        run: |
+          source .venv/bin/activate
+
+          python -m pytest             -p tests.allure_plugin             -v             -m "not live_llm and not deepeval and not live_agent and not live_langsmith"             --alluredir allure-results
+
+
+      - name: Run security deterministic quality gate
+        id: security_gate
+        continue-on-error: true
+        run: |
+          source .venv/bin/activate
+          set -o pipefail
+
+          python -m scripts.run_security_gate             2>&1             | tee artifacts/quality-showcase/security-gate.log
+
+
+      - name: Run DeepEval and live LLM tests
+        id: deepeval
+        if: ${{ inputs.run_deepeval }}
+        continue-on-error: true
+        run: |
+          source .venv/bin/activate
+
+          python -m pytest             -p tests.allure_plugin             -v             -m "deepeval or live_llm"             --alluredir allure-results
+
+
+      - name: Run live LangGraph agent tests
+        id: live_agent
+        if: ${{ inputs.run_live_agent }}
+        continue-on-error: true
+        run: |
+          source .venv/bin/activate
+
+          python -m pytest             -p tests.allure_plugin             -v             -m "live_agent"             --alluredir allure-results
+
+
+      - name: Run live LangSmith pytest tests
+        id: langsmith_tests
+        if: ${{ inputs.run_langsmith }}
+        continue-on-error: true
+        run: |
+          source .venv/bin/activate
+
+          python -m pytest             -p tests.allure_plugin             -v             -m "live_langsmith"             --alluredir allure-results
+
+
+      - name: Run LangSmith offline experiment
+        id: langsmith_experiment
+        if: ${{ inputs.run_langsmith }}
+        continue-on-error: true
+        run: |
+          source .venv/bin/activate
+          set -o pipefail
+
+          python -m scripts.run_langsmith_experiment             2>&1             | tee artifacts/quality-showcase/langsmith-experiment.log
+
+
+      - name: TypeScript compile check
+        id: typescript
+        continue-on-error: true
+        run: |
+          npx tsc --noEmit
+
+
+      - name: Run Playwright E2E with Allure
+        id: playwright
+        if: ${{ inputs.run_playwright }}
+        continue-on-error: true
+        run: |
+          npx playwright test             --config=playwright.allure.config.ts
+
+
+      - name: Write Allure environment metadata
+        if: always()
+        run: |
+          source .venv/bin/activate
+          python -m scripts.write_allure_environment
+
+
+      - name: Generate master Allure report
+        id: allure_report
+        if: always()
+        continue-on-error: true
+        run: |
+          npx allure generate             allure-results             -o allure-report
+
+
+      - name: Write AI quality summary
+        if: always()
+        run: |
+          {
+            echo "# 🤖 AI Customer Support — Full Quality Showcase"
+            echo
+            echo "| Quality Layer | Result |"
+            echo "|---|---|"
+            echo "| Ollama | ${{ steps.ollama.outcome }} |"
+            echo "| App model | ${{ steps.app_model.outcome }} |"
+            echo "| Vector DB | ${{ steps.vector_db.outcome }} |"
+            echo "| Python / RAG / Agent deterministic | ${{ steps.python_quality.outcome }} |"
+            echo "| Security gate | ${{ steps.security_gate.outcome }} |"
+            echo "| DeepEval / Live LLM | ${{ steps.deepeval.outcome }} |"
+            echo "| Live agent | ${{ steps.live_agent.outcome }} |"
+            echo "| LangSmith tests | ${{ steps.langsmith_tests.outcome }} |"
+            echo "| LangSmith experiment | ${{ steps.langsmith_experiment.outcome }} |"
+            echo "| TypeScript | ${{ steps.typescript.outcome }} |"
+            echo "| Playwright | ${{ steps.playwright.outcome }} |"
+            echo "| Allure report | ${{ steps.allure_report.outcome }} |"
+          } >> "${GITHUB_STEP_SUMMARY}"
+
+
+      - name: Upload master AI Quality Allure report
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: AI-QUALITY-ALLURE-REPORT
+          path: allure-report/
+          retention-days: 30
+
+
+      - name: Upload raw Allure results
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: AI-QUALITY-RAW-RESULTS
+          path: allure-results/
+          retention-days: 30
+
+
+      - name: Upload Playwright evidence
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: PLAYWRIGHT-EVIDENCE
+          path: |
+            playwright-report/
+            test-results/
+          if-no-files-found: warn
+          retention-days: 30
+
+
+      - name: Upload AI quality logs
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: AI-QUALITY-LOGS
+          path: artifacts/quality-showcase/
+          if-no-files-found: warn
+          retention-days: 30
+
+
+      - name: Final full AI showcase gate
+        if: always()
+        run: |
+          failed=0
+
+          check_required() {
+            local name="$1"
+            local outcome="$2"
+
+            if [[ "${outcome}" != "success" ]]; then
+              echo "FAIL: ${name} -> ${outcome}"
+              failed=1
+            else
+              echo "PASS: ${name}"
+            fi
+          }
+
+          check_required             "Ollama"             "${{ steps.ollama.outcome }}"
+
+          check_required             "Application model"             "${{ steps.app_model.outcome }}"
+
+          check_required             "Vector database"             "${{ steps.vector_db.outcome }}"
+
+          check_required             "Python deterministic quality"             "${{ steps.python_quality.outcome }}"
+
+          check_required             "Security gate"             "${{ steps.security_gate.outcome }}"
+
+          check_required             "TypeScript"             "${{ steps.typescript.outcome }}"
+
+          check_required             "Allure report"             "${{ steps.allure_report.outcome }}"
+
+          if [[ "${{ inputs.run_deepeval }}" == "true" ]]; then
+            check_required               "DeepEval / Live LLM"               "${{ steps.deepeval.outcome }}"
+
+            check_required               "Evaluation model"               "${{ steps.eval_model.outcome }}"
+          fi
+
+          if [[ "${{ inputs.run_live_agent }}" == "true" ]]; then
+            check_required               "Live agent"               "${{ steps.live_agent.outcome }}"
+          fi
+
+          if [[ "${{ inputs.run_langsmith }}" == "true" ]]; then
+            check_required               "LangSmith tests"               "${{ steps.langsmith_tests.outcome }}"
+
+            check_required               "LangSmith experiment"               "${{ steps.langsmith_experiment.outcome }}"
+          fi
+
+          if [[ "${{ inputs.run_playwright }}" == "true" ]]; then
+            check_required               "Playwright"               "${{ steps.playwright.outcome }}"
+          fi
+
+          echo
+
+          if [[ "${failed}" -ne 0 ]]; then
+            echo "FINAL FULL AI SHOWCASE GATE: FAILED"
+            exit 1
+          fi
+
+          echo "FINAL FULL AI SHOWCASE GATE: PASSED"

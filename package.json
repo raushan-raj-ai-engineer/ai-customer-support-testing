@@ -13,6 +13,8 @@
     "devDependencies": {
         "@playwright/test": "1.62.1",
         "@types/node": "^24.0.0",
+        "allure": "^3.16.0",
+        "allure-playwright": "^3.11.0",
         "typescript": "^5.9.0"
     },
     "engines": {

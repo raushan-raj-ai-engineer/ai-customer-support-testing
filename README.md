@@ -8,6 +8,8 @@ This repository demonstrates not only how to build an AI customer-support agent,
 📚 For line-by-line concepts, code responsibilities, test rationale, and interview explanations, read **[AI_SDET_PROJECT_PLAYBOOK.md](AI_SDET_PROJECT_PLAYBOOK.md)** after this README.
 
 ---
+Allure Report :
+![alt text](image.png)
 
 ## Quick Navigation
 

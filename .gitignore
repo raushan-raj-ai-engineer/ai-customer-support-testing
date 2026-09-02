@@ -20,3 +20,10 @@ blob-report/
 
 # macOS
 .DS_Store
+
+# Allure generated output
+allure-report/
+allure-results/
+
+# Generated showcase artifacts
+artifacts/quality-showcase/
