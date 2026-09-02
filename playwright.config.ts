@@ -5,23 +5,37 @@ import {
 
 
 const baseURL =
-    process.env.PLAYWRIGHT_BASE_URL
-    ?? 'http://127.0.0.1:4173';
+    process.env
+        .PLAYWRIGHT_BASE_URL ??
+    'http://127.0.0.1:4173';
 
 
-const useStaticServer =
-    !process.env.PLAYWRIGHT_BASE_URL;
+const useExternalServer =
+    Boolean(
+        process.env
+            .PLAYWRIGHT_BASE_URL,
+    );
 
 
 export default defineConfig({
+    // ============================================
+    // TEST LOCATION
+    // ============================================
 
-    testDir: './e2e',
+    testDir:
+        './e2e',
 
-    fullyParallel: true,
+
+    // ============================================
+    // EXECUTION
+    // ============================================
+
+    fullyParallel:
+        true,
 
     forbidOnly:
         Boolean(
-            process.env.CI
+            process.env.CI,
         ),
 
     retries:
@@ -34,11 +48,23 @@ export default defineConfig({
             ? 1
             : undefined,
 
-    timeout: 30_000,
+    timeout:
+        30_000,
+
+
+    // ============================================
+    // EXPECT
+    // ============================================
 
     expect: {
-        timeout: 5_000,
+        timeout:
+            5_000,
     },
+
+
+    // ============================================
+    // REPORTERS
+    // ============================================
 
     reporter: [
         [
@@ -47,58 +73,61 @@ export default defineConfig({
 
         [
             'html',
-
             {
-                open: 'never',
+                outputFolder:
+                    'playwright-report',
+
+                open:
+                    'never',
             },
         ],
     ],
 
-    use: {
 
+    // ============================================
+    // SHARED BROWSER CONFIGURATION
+    // ============================================
+
+    use: {
         baseURL,
 
-        trace:
-            'retain-on-failure',
+        // ------------------------------------------
+        // Built-in failure screenshot.
+        //
+        // Our helper captures every business step.
+        // Playwright additionally captures
+        // unexpected test failures.
+        // ------------------------------------------
 
         screenshot:
             'only-on-failure',
 
-        video:
+
+        // ------------------------------------------
+        // Keep trace when a test fails.
+        // ------------------------------------------
+
+        trace:
             'retain-on-failure',
 
-        actionTimeout:
-            10_000,
+
+        // ------------------------------------------
+        // Keep video only for failures.
+        // ------------------------------------------
+
+        video:
+            'retain-on-failure',
     },
 
-    webServer:
-        useStaticServer
-            ? {
-                command:
-                    (
-                        'python3 -m '
-                        + 'http.server 4173 '
-                        + '--bind 127.0.0.1 '
-                        + '--directory app/web'
-                    ),
 
-                url:
-                    (
-                        'http://127.0.0.1:4173'
-                    ),
-
-                reuseExistingServer:
-                    !process.env.CI,
-
-                timeout:
-                    120_000,
-            }
-            : undefined,
+    // ============================================
+    // BROWSER
+    // ============================================
 
     projects: [
-
         {
-            name: 'chromium',
+            name:
+                'chromium',
 
             use: {
                 ...devices[
@@ -106,6 +135,41 @@ export default defineConfig({
                 ],
             },
         },
-
     ],
+
+
+    // ============================================
+    // LOCAL STATIC UI SERVER
+    //
+    // Only used when PLAYWRIGHT_BASE_URL
+    // is NOT provided.
+    // ============================================
+
+    webServer:
+        useExternalServer
+            ? undefined
+            : {
+                command:
+                    'python3 -m http.server 4173 --bind 127.0.0.1 --directory app/web',
+
+                url:
+                    'http://127.0.0.1:4173',
+
+                reuseExistingServer:
+                    !process.env.CI,
+
+                timeout:
+                    30_000,
+            },
+
+
+    // ============================================
+    // OUTPUT
+    //
+    // Screenshots attached by our helper
+    // are saved inside this directory.
+    // ============================================
+
+    outputDir:
+        'test-results',
 });
