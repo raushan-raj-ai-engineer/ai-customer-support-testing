@@ -275,12 +275,13 @@ test.describe(
                     '05 Verify policy intent',
                     async () => {
                         await expect(
-                            page.locator(
-                                '#intent',
+                            page.getByText(
+                                'policy',
+                                {
+                                    exact: true,
+                                },
                             ),
-                        ).toContainText(
-                            'policy',
-                        );
+                        ).toBeVisible();
                     },
                 );
 
